@@ -1,0 +1,5 @@
+- [x] Provider catalog (Bright Data types/countries, Webshare modes)
+- [x] Universal router (fetch/patch_env/build_opener, no hardcoded secrets)
+- [x] Pass-through server (/options, GET/POST /fetch) + harness dropdowns
+- [x] README/.env.example/Containerfile, compile + server smoke test
+- [ ] Live egress test with real BRIGHTDATA_PASSWORD / WEBSHARE creds
