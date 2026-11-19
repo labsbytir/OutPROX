@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>OutPROX harness</title>
+<h1>OutPROX harness</h1>
+<form id="f">
+  <label>Provider <select id="provider"></select></label>
+  <label>Bright Data type <select id="ptype"></select></label>
+  <label>Country <select id="country"></select></label>
+  <label>Webshare mode <select id="wmode"></select></label>
+  <label>Method <select id="method"><option>GET<option>POST</select></label>
+  <label>URL <input id="url" size="60" value="https://geo.brdtest.com/welcome.txt?product=isp&method=native"></label>
+  <label>Body <input id="body" size="40"></label>
+  <button>Send via exit</button>
+</form>
+<pre id="out"></pre>
+<script>
+(async () => {
+  const o = await (await fetch('/options')).json();
+  const fill = (id, vals) => { const s = document.getElementById(id); vals.forEach(v => { const e = document.createElement('option'); e.value = e.textContent = v; s.appendChild(e); }); };
+  fill('provider', o.providers); fill('ptype', o.brightdata_proxy_types);
+  fill('country', [''].concat(o.brightdata_countries)); fill('wmode', o.webshare_modes);
+  document.getElementById('f').onsubmit = async (e) => {
+    e.preventDefault();
+    const v = id => document.getElementById(id).value;
+    const q = new URLSearchParams({ url: v('url'), provider: v('provider'), country: v('country'), mode: v('wmode') });
+    let r;
+    if (v('method') === 'GET') r = await fetch('/fetch?' + q);
+    else r = await fetch('/fetch', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: v('url'), method: 'POST', body: v('body'), provider: v('provider'), country: v('country'), mode: v('wmode') }) });
+    document.getElementById('out').textContent = r.ok ? await r.text() : JSON.stringify(await r.json());
+  };
+})();
+</script>
