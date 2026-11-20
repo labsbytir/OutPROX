@@ -1,0 +1,4 @@
+- [x] Token auth with constant-time compare, open dev mode when unset
+- [x] Stats + JSONL metering on all routes
+- [x] Chain fallback in library + server, harness token field
+- [x] 14-test unittest suite green, CI workflow added

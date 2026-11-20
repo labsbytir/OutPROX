@@ -41,16 +41,21 @@ export BRIGHTDATA_ZONE=isp_proxy1
 export WEBSHARE_USERNAME='...' WEBSHARE_PASSWORD='...'  # required for webshare
 export SPIDER_API_KEY='...'  # required for provider=spider AND via=spider
 # optional: SPIDER_COUNTRY=us SPIDER_PROXY_PORT=8888 (http) / 8889 (https)
-python3 -m outprox.server  # :8080 -> /options, GET/POST /fetch
+OUTPROX_TOKEN=''  # set to require `Authorization: Bearer` on all routes but /healthz
+OUTPROX_LOG=''    # set to a path for JSON-lines request metering
+PORT=8080
 ```
 
 ## Pass-through server
 
-- `GET /options` → providers, Bright Data types, countries, Webshare modes (feeds dropdowns)
+- `GET /options` → providers, features, backends, types, countries, modes (feeds dropdowns)
+- `GET /stats` → request/byte/error counters by route (who burns the GBs)
 - `GET /fetch?url=...&provider=brightdata&country=us` → body
 - `GET /fetch?url=...&via=spider&endpoint=scrape&provider=brightdata&country=us` → Spider JSON (remote_proxy injected)
 - `POST /fetch` JSON `{url, method, body?, headers?, provider?, country?, ...}` → body
 - `POST /fetch` JSON `{url, via:"spider", endpoint:"scrape"|"crawl", provider?, country?, spider_params?}` → Spider JSON
+- `POST /fetch` JSON `{url, chain:[{provider, country, ...}, ...]}` → first exit that succeeds
+- Auth: set `OUTPROX_TOKEN`, send `Authorization: Bearer <token>` (harness has a field)
 
 ## Scrapers (separate feature)
 
@@ -77,6 +82,28 @@ import outprox.acme_scraper  # noqa
 
 Then `provider="acme"` works in `fetch()`/`/fetch`/harness, and
 `POST /scrapers/acme/scrape` + `scraper_run("acme", "scrape", url, ...)` work.
+
+## Fallback chains (cheapest/fastest — your order)
+
+```python
+from outprox import fetch_chain
+body, i = fetch_chain("https://example.com", [
+    {"provider": "brightdata", "country": "us"},
+    {"provider": "spider", "country": "de"},
+])  # i = which link succeeded
+```
+
+Server: `POST /fetch` with `"chain": [...]` instead of flat vars; same for
+`POST /scrape|/crawl` (chain of exits into Spider).
+
+## Tests + CI
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+`.github/workflows/ci.yml` runs compile + unittest on Python 3.9–3.12 for
+`sandbox`/`main` pushes and PRs.
 - `harness.html` → drop-in dropdowns + GET/POST form
 
 ## Container (Podman + Wolfi)
