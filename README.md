@@ -3,8 +3,8 @@
 One exit for APIs, scrapers, firewalls. Targets see provider IPs, never yours.
 
 Providers: **Bright Data** (all proxy types + all countries), **Webshare**
-(direct/backbone), and **Spider** (`proxy.spider.cloud`, residential, 199+
-countries, key as user + `country_code` as password). Callers pick vars
+(direct/backbone), **Spider** (`proxy.spider.cloud`, 199+ countries), and
+**Decodo** (`gate.decodo.com:7000`, country/city/session targeting). Callers pick vars
 (provider/country/type/mode); router injects them into the request.
 No credentials in code.
 
@@ -117,3 +117,5 @@ python3 -m unittest discover -s tests -v
 
 - Bright Data: `brd.superproxy.io:44445`, user `brd-customer-{id}-zone-{zone}[-country-{cc}...]`
 - Webshare: backbone `p.webshare.io:80`, direct via `proxy/list/?mode=direct` address+port
+- Spider: `proxy.spider.cloud:8888`, user = API key, password = `country_code=xx`
+- Decodo: `gate.decodo.com:7000`, user `user-NAME[-country-CC][-city-..][-session-..]`, plain password

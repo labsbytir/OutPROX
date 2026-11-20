@@ -1,0 +1,4 @@
+- [x] decodo.py builder + registration, decodo_types in /options
+- [x] Builder tests (exact URL, session params, missing-secret guard)
+- [x] Suite green (16 tests), /options smoke test
+- [ ] Live fetch via provider=decodo with real creds

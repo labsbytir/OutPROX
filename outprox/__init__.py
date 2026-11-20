@@ -20,6 +20,7 @@ from .scrapers import crawl as scraper_crawl
 from .scrapers import run as scraper_run
 from .scrapers import scrape as scraper_scrape
 from .chain import fetch_chain, scrape_chain
+from .decodo import DECODO_TYPES  # noqa: F401 — self-registers provider on import
 from .registry import (
     provider_names,
     register_provider,
@@ -45,6 +46,7 @@ __all__ = [
     "scraper_crawl",
     "scraper_scrape",
     "scraper_run",
+    "DECODO_TYPES",
     "fetch_chain",
     "scrape_chain",
     "provider_names",

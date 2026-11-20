@@ -13,6 +13,7 @@ from .registry import (
     register_provider,
     scraper_backends,
 )
+from .decodo import DECODO_TYPES
 
 PROVIDERS = ["brightdata", "webshare", "spider"]
 VIAS = ["direct", "spider"]
@@ -123,8 +124,9 @@ def _webshare_url(password: Optional[str] = None, **kw) -> str:
 
 
 def options() -> dict:
+    plugins = [p for p in provider_names() if p not in PROVIDERS]
     return {
-        "providers": provider_names() or PROVIDERS,
+        "providers": PROVIDERS + plugins,
         "features": ["fetch", "scrapers"],
         "vias": VIAS,
         "spider_endpoints": SPIDER_ENDPOINTS,
@@ -134,6 +136,7 @@ def options() -> dict:
         "webshare_modes": WEBSHARE_MODES,
         "webshare_pools": WEBSHARE_POOLS,
         "spider_proxy_ports": SPIDER_PROXY_PORTS,
+        "decodo_types": DECODO_TYPES,
     }
 
 

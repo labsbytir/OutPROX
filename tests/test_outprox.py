@@ -42,6 +42,26 @@ class TestBuilders(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_proxy_url(provider="nope")
 
+    def test_decodo(self):
+        os.environ["DECODO_USERNAME"] = "alice"
+        os.environ["DECODO_PASSWORD"] = "s3cret"
+        try:
+            self.assertEqual(build_proxy_url(provider="decodo"),
+                             "http://user-alice:s3cret@gate.decodo.com:7000")
+            self.assertEqual(build_proxy_url(provider="decodo", country="it"),
+                             "http://user-alice-country-it:s3cret@gate.decodo.com:7000")
+            self.assertIn("session-x1", build_proxy_url(
+                provider="decodo", country="us", session="x1", sessionduration="90"))
+        finally:
+            os.environ.pop("DECODO_USERNAME", None)
+            os.environ.pop("DECODO_PASSWORD", None)
+
+    def test_decodo_missing_secret(self):
+        os.environ.pop("DECODO_USERNAME", None)
+        os.environ.pop("DECODO_PASSWORD", None)
+        with self.assertRaises(RuntimeError):
+            build_proxy_url(provider="decodo")
+
     def test_missing_secret(self):
         os.environ.pop("BRIGHTDATA_PASSWORD", None)
         try:
