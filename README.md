@@ -1,6 +1,21 @@
 # OutPROX — universal egress router
 
-One exit for APIs, scrapers, firewalls. Targets see provider IPs, never yours.
+One server, two doors. Targets see provider IPs, never yours.
+
+- **REST** (`:8080`): `GET /fetch`, `POST /fetch|/scrape|/crawl|/scrapers/*`, `GET /options|/stats`
+- **Forward proxy** (`:8888`): point any tool at it — `curl -x`, `HTTP_PROXY`, browsers
+
+```bash
+export OUTPROX_TOKEN='pick-one'           # required in production
+export BRIGHTDATA_PASSWORD='...' WEBSHARE_USERNAME='...' WEBSHARE_PASSWORD='...'
+export SPIDER_API_KEY='...' DECODO_USERNAME='...' DECODO_PASSWORD='...'
+python3 -m outprox.server  # REST :8080 + forward proxy :8888
+curl -x http://brightdata-us:$OUTPROX_TOKEN@localhost:8888 https://example.com
+curl -x http://spider-de:$OUTPROX_TOKEN@localhost:8888 https://example.com
+```
+
+Per-request exit via proxy userinfo: `{provider}[-{country}[-{session}]]:{token}`.
+No userinfo → env defaults (`OUTPROX_PROVIDER`, `..._COUNTRY`, ...).
 
 Providers: **Bright Data** (all proxy types + all countries), **Webshare**
 (direct/backbone), **Spider** (`proxy.spider.cloud`, 199+ countries), and

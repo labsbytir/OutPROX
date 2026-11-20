@@ -1,49 +1,25 @@
 """Stdlib pass-through server (no deps).
 
-Routes: GET /fetch, POST /fetch|/scrape|/crawl|/scrapers/*, GET /options|/stats|/healthz
-Auth: set OUTPROX_TOKEN; every route except / and /healthz needs
-`Authorization: Bearer <token>`. Unset = open dev mode.
-Metering: in-memory counters at GET /stats + JSON lines at $OUTPROX_LOG.
+REST: GET /fetch, POST /fetch|/scrape|/crawl|/scrapers/*, GET /options|/stats|/healthz
+Forward proxy (same process, OUTPROX_PROXY_PORT, default 8888): point any tool
+at us via -x/HTTP_PROXY; exits through your providers. Both share auth+metering.
 """
 import hmac
 import json
 import os
+import threading
 import time
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from .chain import fetch_chain, scrape_chain
+from .meter import STATS, _meter
 from .providers import options
 from .router import fetch
 from .scrapers import crawl as scraper_crawl
 from .scrapers import run as scraper_run
 from .scrapers import scrape as scraper_scrape
 from .spider import scrape as spider_scrape
-
-STATS = {"requests": 0, "errors": 0, "bytes_in": 0, "bytes_out": 0, "by_route": {}}
-
-
-def _meter(route, label, status, bytes_in, bytes_out, ms):
-    STATS["requests"] += 1
-    STATS["bytes_in"] += bytes_in
-    STATS["bytes_out"] += bytes_out
-    key = f"{route}:{label}"
-    bucket = STATS["by_route"].setdefault(key, {"n": 0, "err": 0, "out": 0})
-    bucket["n"] += 1
-    bucket["out"] += bytes_out
-    if status >= 400:
-        STATS["errors"] += 1
-        bucket["err"] += 1
-    path = os.environ.get("OUTPROX_LOG", "")
-    if path:
-        try:
-            with open(path, "a") as f:
-                f.write(json.dumps({
-                    "ts": time.time(), "route": route, "label": label,
-                    "status": status, "in": bytes_in, "out": bytes_out, "ms": ms,
-                }) + "\n")
-        except OSError:
-            pass
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -224,6 +200,13 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main(port: int = 8080):
+    from .forward import serve_forever as serve_forward
+    t = threading.Thread(
+        target=serve_forward,
+        args=(int(os.environ.get("OUTPROX_PROXY_PORT", "8888"),),),
+        daemon=True,
+    )
+    t.start()
     HTTPServer(("0.0.0.0", port), Handler).serve_forever()
 
 

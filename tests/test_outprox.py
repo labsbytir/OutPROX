@@ -22,6 +22,8 @@ from outprox import (  # noqa: E402
     scraper_run,
 )
 from outprox.server import Handler  # noqa: E402
+from outprox.forward import ForwardHandler, split_userinfo  # noqa: E402
+from outprox.providers import parse_proxy_url  # noqa: E402
 
 
 class TestBuilders(unittest.TestCase):
@@ -159,6 +161,71 @@ class TestServer(unittest.TestCase):
                                 {"url": "https://example.com", "provider": "brightdata"})
         self.assertEqual(code, 502)
         self.assertIn("unknown scraper backend", body.decode())
+
+
+class TestForwardParsing(unittest.TestCase):
+    def test_split_userinfo(self):
+        from outprox.forward import split_userinfo
+        self.assertEqual(split_userinfo(""), {})
+        self.assertEqual(split_userinfo("spider"), {"provider": "spider"})
+        self.assertEqual(split_userinfo("brightdata-us"),
+                         {"provider": "brightdata", "country": "us"})
+        self.assertEqual(split_userinfo("decodo-gb-sess1"),
+                         {"provider": "decodo", "country": "gb", "session": "sess1"})
+
+    def test_parse_proxy_url(self):
+        scheme, host, port, user, pwd = parse_proxy_url(
+            "http://u-abc-country-us:p%40ss@brd.superproxy.io:44445")
+        self.assertEqual((scheme, host, port, user, pwd),
+                         ("http", "brd.superproxy.io", 44445, "u-abc-country-us", "p@ss"))
+
+
+class TestForwardProxy(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from http.server import ThreadingHTTPServer
+        os.environ["OUTPROX_TOKEN"] = "fwd-token"
+        cls.srv = ThreadingHTTPServer(("127.0.0.1", 0), ForwardHandler)
+        cls.port = cls.srv.server_address[1]
+        cls.t = threading.Thread(target=cls.srv.serve_forever, daemon=True)
+        cls.t.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.srv.shutdown()
+        os.environ.pop("OUTPROX_TOKEN", None)
+
+    def _raw(self, req):
+        import socket
+        s = socket.create_connection(("127.0.0.1", self.port), timeout=5)
+        s.sendall(req)
+        out = b""
+        try:
+            while True:
+                chunk = s.recv(4096)
+                if not chunk:
+                    break
+                out += chunk
+                if len(out) > 65536:
+                    break
+        except (OSError, socket.timeout):
+            pass
+        s.close()
+        return out.split(b"\r\n", 1)[0]
+
+    def test_connect_no_token_denied(self):
+        line = self._raw(b"CONNECT example.com:443 HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        self.assertIn(b"407", line)
+
+    def test_connect_bad_provider_502(self):
+        import base64
+        cred = base64.b64encode(b"nope-us:fwd-token").decode()
+        line = self._raw(f"CONNECT example.com:443 HTTP/1.1\r\nHost: example.com\r\nProxy-Authorization: Basic {cred}\r\n\r\n".encode())
+        self.assertTrue(line.startswith(b"HTTP/1.1 502") or b"502" in line)
+
+    def test_absolute_form_no_token_denied(self):
+        line = self._raw(b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        self.assertIn(b"407", line)
 
 
 if __name__ == "__main__":

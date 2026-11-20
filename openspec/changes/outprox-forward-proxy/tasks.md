@@ -1,0 +1,4 @@
+- [x] Forward proxy with per-request exit userinfo + 407 auth
+- [x] CONNECT chaining with upstream status relay (not masked as 502)
+- [x] 21-test suite green, live chain verified to Spider (upstream 402 relayed)
+- [ ] Live 200 through a funded exit (Bright Data/Webshare/Decodo/Spider)

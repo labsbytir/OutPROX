@@ -123,6 +123,14 @@ def _webshare_url(password: Optional[str] = None, **kw) -> str:
     return f"http://{user}:{urllib.parse.quote(pwd, safe='')}@{host}:{port}"
 
 
+def parse_proxy_url(url):
+    """'http://user:pass@host:port' -> (scheme, host, port, user, password)."""
+    p = urllib.parse.urlparse(url)
+    return (p.scheme, p.hostname, p.port,
+            urllib.parse.unquote(p.username or ""),
+            urllib.parse.unquote(p.password or ""))
+
+
 def options() -> dict:
     plugins = [p for p in provider_names() if p not in PROVIDERS]
     return {
