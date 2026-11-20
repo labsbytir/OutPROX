@@ -1,0 +1,5 @@
+- [x] spider.py with remote_proxy injection + endpoint/api-key guards
+- [x] providers options expose vias + spider_endpoints
+- [x] server via=spider on GET/POST /fetch, harness dropdowns
+- [x] README/.env.example, compile + /options + guard smoke tests
+- [ ] Live Spider /scrape with funded key

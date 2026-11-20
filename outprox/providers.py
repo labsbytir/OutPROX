@@ -8,6 +8,8 @@ import urllib.parse
 from typing import Optional
 
 PROVIDERS = ["brightdata", "webshare"]
+VIAS = ["direct", "spider"]
+SPIDER_ENDPOINTS = ["scrape", "crawl"]
 
 # Bright Data proxy families (docs: residential/ipv4, mega ipv4+ipv6, ipv6,
 # dedicated, datacenter, isp). Host/port identical (native 44445); type is a
@@ -94,6 +96,8 @@ def _webshare_url(password: Optional[str] = None, **kw) -> str:
 def options() -> dict:
     return {
         "providers": PROVIDERS,
+        "vias": VIAS,
+        "spider_endpoints": SPIDER_ENDPOINTS,
         "brightdata_proxy_types": BRIGHTDATA_PROXY_TYPES,
         "brightdata_countries": BRIGHTDATA_COUNTRIES,
         "webshare_modes": WEBSHARE_MODES,

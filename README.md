@@ -19,6 +19,13 @@ print(fetch("https://geo.brdtest.com/welcome.txt?product=isp&method=native").dec
 print(fetch("https://example.com", provider="webshare", mode="backbone").decode())
 ```
 
+```python
+# Spider Cloud with YOUR exit as remote_proxy (50% data-transfer saving,
+# still runs Spider's browser/render/markdown pipeline)
+from outprox import spider_scrape
+print(spider_scrape("https://example.com", provider="brightdata", country="us"))
+```
+
 ## Env
 
 ```bash
@@ -27,6 +34,7 @@ export BRIGHTDATA_PASSWORD='...'      # required for brightdata
 export BRIGHTDATA_CUSTOMER=hl_e5e462d9
 export BRIGHTDATA_ZONE=isp_proxy1
 export WEBSHARE_USERNAME='...' WEBSHARE_PASSWORD='...'  # required for webshare
+export SPIDER_API_KEY='...'  # required for via=spider (/scrape, /crawl remote_proxy)
 python3 -m outprox.server  # :8080 -> /options, GET/POST /fetch
 ```
 
@@ -34,7 +42,9 @@ python3 -m outprox.server  # :8080 -> /options, GET/POST /fetch
 
 - `GET /options` → providers, Bright Data types, countries, Webshare modes (feeds dropdowns)
 - `GET /fetch?url=...&provider=brightdata&country=us` → body
+- `GET /fetch?url=...&via=spider&endpoint=scrape&provider=brightdata&country=us` → Spider JSON (remote_proxy injected)
 - `POST /fetch` JSON `{url, method, body?, headers?, provider?, country?, ...}` → body
+- `POST /fetch` JSON `{url, via:"spider", endpoint:"scrape"|"crawl", provider?, country?, spider_params?}` → Spider JSON
 - `harness.html` → drop-in dropdowns + GET/POST form
 
 ## Container (Podman + Wolfi)

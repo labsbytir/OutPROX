@@ -3,6 +3,8 @@ from .providers import (
     BRIGHTDATA_COUNTRIES,
     BRIGHTDATA_PROXY_TYPES,
     PROVIDERS,
+    SPIDER_ENDPOINTS,
+    VIAS,
     WEBSHARE_MODES,
     build_proxy_url,
     options,
@@ -13,11 +15,14 @@ from .router import (
     get_requests_proxies,
     patch_env,
 )
+from .spider import scrape as spider_scrape
 
 __all__ = [
     "BRIGHTDATA_COUNTRIES",
     "BRIGHTDATA_PROXY_TYPES",
     "PROVIDERS",
+    "SPIDER_ENDPOINTS",
+    "VIAS",
     "WEBSHARE_MODES",
     "build_proxy_url",
     "build_opener",
@@ -25,4 +30,5 @@ __all__ = [
     "get_requests_proxies",
     "options",
     "patch_env",
+    "spider_scrape",
 ]

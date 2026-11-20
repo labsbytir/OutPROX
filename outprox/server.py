@@ -5,6 +5,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from .providers import options
 from .router import fetch
+from .spider import scrape as spider_scrape
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -28,6 +29,13 @@ class Handler(BaseHTTPRequestHandler):
             if not url:
                 return self._json({"error": "missing ?url="}, 400)
             proxy_kw = {k: v[0] for k, v in q.items() if k != "url" and v}
+            via = proxy_kw.pop("via", "direct")
+            if via == "spider":
+                try:
+                    endpoint = proxy_kw.pop("endpoint", "scrape")
+                    return self._json(spider_scrape(url, endpoint=endpoint, **proxy_kw))
+                except Exception as e:  # noqa: BLE001 - surface as JSON
+                    return self._json({"error": str(e)}, 502)
             try:
                 body = fetch(url, method="GET", **proxy_kw)
             except Exception as e:  # noqa: BLE001 - surface as JSON
@@ -53,6 +61,20 @@ class Handler(BaseHTTPRequestHandler):
         method = payload.pop("method", "POST")
         data = payload.pop("body", None)
         headers = payload.pop("headers", None)
+        via = payload.pop("via", "direct")
+        if via == "spider":
+            if not url:
+                return self._json({"error": "missing url"}, 400)
+            try:
+                endpoint = payload.pop("endpoint", "scrape")
+                spider_params = payload.pop("spider_params", None)
+                return self._json(
+                    spider_scrape(
+                        url, endpoint=endpoint, spider_params=spider_params, **payload
+                    )
+                )
+            except Exception as e:  # noqa: BLE001
+                return self._json({"error": str(e)}, 502)
         proxy_kw = payload  # rest = pass-through vars (provider/country/zone/...)
         if not url:
             return self._json({"error": "missing url"}, 400)
