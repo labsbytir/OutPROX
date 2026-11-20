@@ -7,6 +7,13 @@ import os
 import urllib.parse
 from typing import Optional
 
+from .registry import (
+    PROVIDER_BUILDERS,
+    provider_names,
+    register_provider,
+    scraper_backends,
+)
+
 PROVIDERS = ["brightdata", "webshare", "spider"]
 VIAS = ["direct", "spider"]
 SPIDER_ENDPOINTS = ["scrape", "crawl"]
@@ -51,13 +58,11 @@ def build_proxy_url(
     **kw,
 ) -> str:
     provider = (provider or os.environ.get("OUTPROX_PROVIDER", "brightdata")).lower()
-    if provider == "brightdata":
-        return _brightdata_url(password, **kw)
-    if provider == "webshare":
-        return _webshare_url(password, **kw)
-    if provider == "spider":
-        return _spider_proxy_url(**kw)
-    raise ValueError(f"unknown provider {provider!r}; pick {PROVIDERS}")
+    try:
+        build = PROVIDER_BUILDERS[provider]
+    except KeyError:
+        raise ValueError(f"unknown provider {provider!r}; pick {provider_names()}")
+    return build(password, **kw)
 
 
 def _brightdata_url(password: Optional[str] = None, **kw) -> str:
@@ -79,7 +84,7 @@ def _brightdata_url(password: Optional[str] = None, **kw) -> str:
     return f"http://{user}:{urllib.parse.quote(pwd, safe='')}@{host}:{port}"
 
 
-def _spider_proxy_url(**kw) -> str:
+def _spider_proxy_url(password: Optional[str] = None, **kw) -> str:
     """Spider residential proxy: key as user, params (country_code, ...) as password."""
     key = kw.get("api_key") or os.environ.get("SPIDER_API_KEY", "")
     if not key:
@@ -119,13 +124,19 @@ def _webshare_url(password: Optional[str] = None, **kw) -> str:
 
 def options() -> dict:
     return {
-        "providers": PROVIDERS,
+        "providers": provider_names() or PROVIDERS,
         "features": ["fetch", "scrapers"],
         "vias": VIAS,
         "spider_endpoints": SPIDER_ENDPOINTS,
+        "scraper_backends": scraper_backends(),
         "brightdata_proxy_types": BRIGHTDATA_PROXY_TYPES,
         "brightdata_countries": BRIGHTDATA_COUNTRIES,
         "webshare_modes": WEBSHARE_MODES,
         "webshare_pools": WEBSHARE_POOLS,
         "spider_proxy_ports": SPIDER_PROXY_PORTS,
     }
+
+
+register_provider("brightdata", _brightdata_url)
+register_provider("webshare", _webshare_url)
+register_provider("spider", _spider_proxy_url)

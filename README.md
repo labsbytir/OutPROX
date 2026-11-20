@@ -56,8 +56,27 @@ python3 -m outprox.server  # :8080 -> /options, GET/POST /fetch
 
 - `POST /scrape` JSON `{url, provider?, country?, spider_params?}` → Spider /scrape JSON
 - `POST /crawl` JSON `{url, provider?, country?, spider_params?}` → Spider /crawl JSON
-- Python: `from outprox import scraper_scrape, scraper_crawl`
-- Harness has a separate Scrapers form posting to `/scrape` or `/crawl`
+- `POST /scrapers/{backend}/{endpoint}` → any registered backend (generic)
+- Python: `from outprox import scraper_scrape, scraper_crawl, scraper_run`
+- Harness has a separate Scrapers form (backend + endpoint dropdowns)
+
+## Adding more scrapers or proxies (template)
+
+Copy a template, fill the blanks, import once — no core changes:
+
+```bash
+cp templates/new_provider.py outprox/acme.py   # edit host/auth, keep register_provider("acme", ...)
+cp templates/new_scraper.py outprox/acme_scraper.py  # edit POST, keep register_scraper("acme", [...], run)
+```
+
+```python
+# outprox/__init__.py — one line each so they self-register at startup
+import outprox.acme  # noqa
+import outprox.acme_scraper  # noqa
+```
+
+Then `provider="acme"` works in `fetch()`/`/fetch`/harness, and
+`POST /scrapers/acme/scrape` + `scraper_run("acme", "scrape", url, ...)` work.
 - `harness.html` → drop-in dropdowns + GET/POST form
 
 ## Container (Podman + Wolfi)

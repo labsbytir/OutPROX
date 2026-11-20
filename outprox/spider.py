@@ -9,6 +9,7 @@ import urllib.request
 from typing import Optional
 
 from .providers import build_proxy_url
+from .registry import register_scraper
 
 SPIDER_ENDPOINTS = ["scrape", "crawl"]
 
@@ -39,3 +40,6 @@ def scrape(
     )
     with urllib.request.build_opener().open(req, timeout=timeout) as r:
         return json.loads(r.read().decode())
+
+
+register_scraper("spider", SPIDER_ENDPOINTS, scrape)

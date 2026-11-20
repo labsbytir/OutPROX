@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from .providers import options
 from .router import fetch
 from .scrapers import crawl as scraper_crawl
+from .scrapers import run as scraper_run
 from .scrapers import scrape as scraper_scrape
 from .spider import scrape as spider_scrape
 
@@ -52,6 +53,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
+        parts = parsed.path.strip("/").split("/")
+        if len(parts) == 3 and parts[0] == "scrapers":
+            return self._backend(parts[1], parts[2])
         if parsed.path in ("/scrape", "/crawl"):
             return self._scraper(parsed.path.lstrip("/"))
         if parsed.path != "/fetch":
@@ -111,6 +115,20 @@ class Handler(BaseHTTPRequestHandler):
         fn = scraper_scrape if endpoint == "scrape" else scraper_crawl
         try:
             return self._json(fn(url, spider_params=spider_params, **payload))
+        except Exception as e:  # noqa: BLE001
+            return self._json({"error": str(e)}, 502)
+
+    def _backend(self, backend, endpoint):
+        length = int(self.headers.get("Content-Length", 0))
+        try:
+            payload = json.loads(self.rfile.read(length) or b"{}")
+        except Exception as e:  # noqa: BLE001
+            return self._json({"error": f"bad json: {e}"}, 400)
+        url = payload.pop("url", None)
+        if not url:
+            return self._json({"error": "missing url"}, 400)
+        try:
+            return self._json(scraper_run(backend, endpoint, url, **payload))
         except Exception as e:  # noqa: BLE001
             return self._json({"error": str(e)}, 502)
 

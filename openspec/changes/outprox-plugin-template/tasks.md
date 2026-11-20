@@ -1,0 +1,4 @@
+- [x] registry + dispatch with unknown-name guards
+- [x] providers/spider self-register; templates for both kinds
+- [x] generic server route, harness backend dropdown, README
+- [x] plugin round-trip test (dummy provider+backend) + route smoke tests

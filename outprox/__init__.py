@@ -17,7 +17,15 @@ from .router import (
 )
 from .spider import scrape as spider_scrape
 from .scrapers import crawl as scraper_crawl
+from .scrapers import run as scraper_run
 from .scrapers import scrape as scraper_scrape
+from .registry import (
+    provider_names,
+    register_provider,
+    register_scraper,
+    run_scraper,
+    scraper_backends,
+)
 
 __all__ = [
     "BRIGHTDATA_COUNTRIES",
@@ -35,4 +43,10 @@ __all__ = [
     "spider_scrape",
     "scraper_crawl",
     "scraper_scrape",
+    "scraper_run",
+    "provider_names",
+    "register_provider",
+    "register_scraper",
+    "run_scraper",
+    "scraper_backends",
 ]
