@@ -7,9 +7,11 @@ import os
 import urllib.parse
 from typing import Optional
 
-PROVIDERS = ["brightdata", "webshare"]
+PROVIDERS = ["brightdata", "webshare", "spider"]
 VIAS = ["direct", "spider"]
 SPIDER_ENDPOINTS = ["scrape", "crawl"]
+# Spider proxy front-end: HTTP :8888, HTTPS :8889, SOCKS5 :8887
+SPIDER_PROXY_PORTS = {"http": "8888", "https": "8889", "socks5": "8887"}
 
 # Bright Data proxy families (docs: residential/ipv4, mega ipv4+ipv6, ipv6,
 # dedicated, datacenter, isp). Host/port identical (native 44445); type is a
@@ -53,6 +55,8 @@ def build_proxy_url(
         return _brightdata_url(password, **kw)
     if provider == "webshare":
         return _webshare_url(password, **kw)
+    if provider == "spider":
+        return _spider_proxy_url(**kw)
     raise ValueError(f"unknown provider {provider!r}; pick {PROVIDERS}")
 
 
@@ -73,6 +77,26 @@ def _brightdata_url(password: Optional[str] = None, **kw) -> str:
     host = os.environ.get("BRIGHTDATA_HOST", "brd.superproxy.io")
     port = os.environ.get("BRIGHTDATA_PORT", "44445")
     return f"http://{user}:{urllib.parse.quote(pwd, safe='')}@{host}:{port}"
+
+
+def _spider_proxy_url(**kw) -> str:
+    """Spider residential proxy: key as user, params (country_code, ...) as password."""
+    key = kw.get("api_key") or os.environ.get("SPIDER_API_KEY", "")
+    if not key:
+        raise RuntimeError("Set SPIDER_API_KEY env var")
+    params = []
+    country = (kw.get("country") or os.environ.get("SPIDER_COUNTRY", "")).lower()
+    if country:
+        params.append(f"country_code={country}")
+    trackers = kw.get("trackers_disabled", os.environ.get("SPIDER_TRACKERS_DISABLED", ""))
+    if trackers != "":
+        params.append(f"trackers_disabled={str(trackers).lower()}")
+    # shortcut: limit of this join is Spider only documents single-param use —
+    # multi-param separator unconfirmed, country-only is the safe path
+    userinfo = key + (":" + ";".join(params) if params else ":")
+    host = os.environ.get("SPIDER_PROXY_HOST", "proxy.spider.cloud")
+    port = kw.get("port") or os.environ.get("SPIDER_PROXY_PORT", "8888")
+    return f"http://{userinfo}@{host}:{port}"
 
 
 def _webshare_url(password: Optional[str] = None, **kw) -> str:
@@ -103,4 +127,5 @@ def options() -> dict:
         "brightdata_countries": BRIGHTDATA_COUNTRIES,
         "webshare_modes": WEBSHARE_MODES,
         "webshare_pools": WEBSHARE_POOLS,
+        "spider_proxy_ports": SPIDER_PROXY_PORTS,
     }

@@ -1,0 +1,3 @@
+- [x] _spider_proxy_url + PROVIDERS + options ports
+- [x] README disambiguation, compile + builder + /options smoke tests
+- [ ] Live fetch via provider=spider with funded key

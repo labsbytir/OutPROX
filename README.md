@@ -2,9 +2,14 @@
 
 One exit for APIs, scrapers, firewalls. Targets see provider IPs, never yours.
 
-Providers: **Bright Data** (all proxy types + all countries) and **Webshare**
-(direct/backbone). Callers pick vars (provider/country/type/mode); router injects
-them into the request. No credentials in code.
+Providers: **Bright Data** (all proxy types + all countries), **Webshare**
+(direct/backbone), and **Spider** (`proxy.spider.cloud`, residential, 199+
+countries, key as user + `country_code` as password). Callers pick vars
+(provider/country/type/mode); router injects them into the request.
+No credentials in code.
+
+Note: `provider=spider` = exit through Spider's proxy pool.
+`via=spider` = run through Spider's scrape/crawl API (any exit as `remote_proxy`).
 
 ## Quick use (append to a form/script)
 
@@ -34,7 +39,8 @@ export BRIGHTDATA_PASSWORD='...'      # required for brightdata
 export BRIGHTDATA_CUSTOMER=hl_e5e462d9
 export BRIGHTDATA_ZONE=isp_proxy1
 export WEBSHARE_USERNAME='...' WEBSHARE_PASSWORD='...'  # required for webshare
-export SPIDER_API_KEY='...'  # required for via=spider (/scrape, /crawl remote_proxy)
+export SPIDER_API_KEY='...'  # required for provider=spider AND via=spider
+# optional: SPIDER_COUNTRY=us SPIDER_PROXY_PORT=8888 (http) / 8889 (https)
 python3 -m outprox.server  # :8080 -> /options, GET/POST /fetch
 ```
 
