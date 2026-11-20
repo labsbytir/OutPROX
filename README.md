@@ -45,6 +45,13 @@ python3 -m outprox.server  # :8080 -> /options, GET/POST /fetch
 - `GET /fetch?url=...&via=spider&endpoint=scrape&provider=brightdata&country=us` → Spider JSON (remote_proxy injected)
 - `POST /fetch` JSON `{url, method, body?, headers?, provider?, country?, ...}` → body
 - `POST /fetch` JSON `{url, via:"spider", endpoint:"scrape"|"crawl", provider?, country?, spider_params?}` → Spider JSON
+
+## Scrapers (separate feature)
+
+- `POST /scrape` JSON `{url, provider?, country?, spider_params?}` → Spider /scrape JSON
+- `POST /crawl` JSON `{url, provider?, country?, spider_params?}` → Spider /crawl JSON
+- Python: `from outprox import scraper_scrape, scraper_crawl`
+- Harness has a separate Scrapers form posting to `/scrape` or `/crawl`
 - `harness.html` → drop-in dropdowns + GET/POST form
 
 ## Container (Podman + Wolfi)

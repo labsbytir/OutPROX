@@ -16,6 +16,8 @@ from .router import (
     patch_env,
 )
 from .spider import scrape as spider_scrape
+from .scrapers import crawl as scraper_crawl
+from .scrapers import scrape as scraper_scrape
 
 __all__ = [
     "BRIGHTDATA_COUNTRIES",
@@ -31,4 +33,6 @@ __all__ = [
     "options",
     "patch_env",
     "spider_scrape",
+    "scraper_crawl",
+    "scraper_scrape",
 ]

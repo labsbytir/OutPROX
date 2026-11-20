@@ -15,7 +15,29 @@
   <button>Send via exit</button>
 </form>
 <pre id="out"></pre>
+<h2>Scrapers (separate feature)</h2>
+<form id="s">
+  <label>Endpoint <select id="sendpoint"><option>scrape<option>crawl</select></label>
+  <label>Provider <select id="sprovider"></select></label>
+  <label>Country <select id="scountry"></select></label>
+  <label>URL <input id="surl" size="60" value="https://example.com"></label>
+  <button>Run scraper</button>
+</form>
+<pre id="sout"></pre>
 <script>
+(function () {
+  const fill = (id, vals) => { const s = document.getElementById(id); vals.forEach(v => { const e = document.createElement('option'); e.value = e.textContent = v; s.appendChild(e); }); };
+  fetch('/options').then(r => r.json()).then(o => {
+    fill('sprovider', o.providers); fill('scountry', [''].concat(o.brightdata_countries));
+    document.getElementById('s').onsubmit = async (e) => {
+      e.preventDefault();
+      const v = id => document.getElementById(id).value;
+      const r = await fetch('/' + v('sendpoint'), { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: v('surl'), provider: v('sprovider'), country: v('scountry') }) });
+      document.getElementById('sout').textContent = JSON.stringify(await r.json(), null, 2);
+    };
+  });
+})();
 (async () => {
   const o = await (await fetch('/options')).json();
   const fill = (id, vals) => { const s = document.getElementById(id); vals.forEach(v => { const e = document.createElement('option'); e.value = e.textContent = v; s.appendChild(e); }); };

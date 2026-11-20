@@ -96,6 +96,7 @@ def _webshare_url(password: Optional[str] = None, **kw) -> str:
 def options() -> dict:
     return {
         "providers": PROVIDERS,
+        "features": ["fetch", "scrapers"],
         "vias": VIAS,
         "spider_endpoints": SPIDER_ENDPOINTS,
         "brightdata_proxy_types": BRIGHTDATA_PROXY_TYPES,

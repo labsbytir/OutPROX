@@ -1,0 +1,4 @@
+- [x] scrapers.py with scrape()/crawl() wrappers
+- [x] server POST /scrape + /crawl routes, harness Scrapers section
+- [x] options features list, README docs, guard + route smoke tests
+- [ ] Live Spider /scrape + /crawl with funded key

@@ -1,10 +1,12 @@
-"""Stdlib pass-through server (no deps). GET/POST /fetch, GET /options."""
+"""Stdlib pass-through server (no deps). GET /fetch, POST /fetch|/scrape|/crawl."""
 import json
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from .providers import options
 from .router import fetch
+from .scrapers import crawl as scraper_crawl
+from .scrapers import scrape as scraper_scrape
 from .spider import scrape as spider_scrape
 
 
@@ -50,6 +52,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
+        if parsed.path in ("/scrape", "/crawl"):
+            return self._scraper(parsed.path.lstrip("/"))
         if parsed.path != "/fetch":
             return self._json({"error": "not found"}, 404)
         length = int(self.headers.get("Content-Length", 0))
@@ -93,6 +97,22 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def _scraper(self, endpoint):
+        length = int(self.headers.get("Content-Length", 0))
+        try:
+            payload = json.loads(self.rfile.read(length) or b"{}")
+        except Exception as e:  # noqa: BLE001
+            return self._json({"error": f"bad json: {e}"}, 400)
+        url = payload.pop("url", None)
+        if not url:
+            return self._json({"error": "missing url"}, 400)
+        spider_params = payload.pop("spider_params", None)
+        fn = scraper_scrape if endpoint == "scrape" else scraper_crawl
+        try:
+            return self._json(fn(url, spider_params=spider_params, **payload))
+        except Exception as e:  # noqa: BLE001
+            return self._json({"error": str(e)}, 502)
 
     def log_message(self, *a):  # quieter logs
         pass
